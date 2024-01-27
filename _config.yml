@@ -102,6 +102,6 @@ theme: butterfly
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: https://github.com/SereinCease/SereinCease.github.io
+  repo: git@github.com:SereinCease/SereinCease.github.io.git
   branch: main
   token: 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
