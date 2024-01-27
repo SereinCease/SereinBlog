@@ -29,7 +29,7 @@ sleep 1s
 echo "####### 开始推送 #######"
 
 
-git push origin main
+git push -f origin main
 
 echo "####### 推送成功 #######"
 
