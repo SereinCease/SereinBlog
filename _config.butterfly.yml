@@ -22,14 +22,13 @@ menu:
   首页: / || fa fa-home
   留言板: /messageboard/ || fa fa-paper-plane
   找文章 || fa-fw fa fa-book:
-    - 标签 || /tags/ || fa fa-tags
-    - 分类 || /categories/ || fa fa-folder-open
-    - 时间轴 || /archives/ || fa fa-archive
+    标签: /tags/ || fa fa-tags
+    分类: /categories/ || fa fa-folder-open
+    时间轴: /archives/ || fa fa-archive
   链接 || fa fa-link:
-    - 友情链接 || /link/ || fa fa-users
-    - Lete乐特导航网 || https://nav.lete114.top || fa fa-star
+    友情链接: /link/ || fa fa-users
   菜单 || fa fa-list:
-    - 关于 || /about/ || fa fa-heart
+    SereinCease个人主页: /serein/ || fa fa-user
     
 
 # Code Blocks (代碼相關)
