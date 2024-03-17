@@ -92,3 +92,23 @@ b.给程序员：程序接口---**系统调用**
 ![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-16/20240316101308-667815.png)
 
 ![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-16/20240316101434-4fdcc8.png)
+
+定义微内核结构os的四个方面：
+
+1.内核足够小
+
+2.基于客户/服务器模式（C/S）
+
+3、应用机制与策略分离原理
+
+采用面向对象技术
+
+# 五、操作系统引导
+
+![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-17/20240317093926-7d9322.png)
+
+# 六、虚拟机
+
+![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-17/20240317095220-080341.png)
+
+![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-17/20240317095329-940861.png)
