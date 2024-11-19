@@ -2,7 +2,7 @@
 title: 数据结构知识点
 date: 2024-03-05 19:38:12
 tags: 数据结构
-categories: 数据结构
+categories: 408
 cover: 
 description: 数据结构中非代码知识点总结
 ---

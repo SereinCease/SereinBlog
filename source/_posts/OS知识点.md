@@ -1,8 +1,8 @@
 ---
-title: OS第一章计算机系统概述
+title: OS知识点
 date: 2024-03-13 17:24:04
 tags: 操作系统
-categories: 操作系统
+categories: 408
 cover:
 description:
 ---
