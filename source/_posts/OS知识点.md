@@ -115,4 +115,4 @@ b.给程序员：程序接口---**系统调用**
 
 ![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-17/20240317095220-080341.png)
 
-![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-17/20240317095329-940861.png)
+![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2024-03-17/20240317095329-940861.png)·1
