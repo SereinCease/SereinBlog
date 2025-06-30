@@ -17,25 +17,25 @@ description:
 
 - 用例发现：自动化的从各目录、各文件种收集测试用例  
 - 用例管理：根据需求对用例进行筛选、忽略、跳过等操作  
-- 环境管理：在用例执行前后，自动完成某些擦着，构造合适的执行条件  
+- 环境管理：在用例执行前后，自动完成某些操作，构造合适的执行条件  
 - 用例执行：执行用例的测试步骤  
 - 断言：执行用例时，判定执行结果是否符合预期  
 
-大部分的变成语言都有对应测试框架：
+大部分的编程语言都有对应测试框架：
 
 - Java: JUnit, TestNG  
 - php: phpunit  
 - Python: unittest, pytest  
-- 更多。。。  
+- 更多...... 
 
 unittest:  
 - python内置、无需安装  
-- 用浓钢Java风格  
+- 用浓郁Java风格  
 - 无法升级、扩展  
 
 pytest:  
 - 手动安装、自由切换版本  
-- 有浓钢Python风格  
+- 有浓郁Python风格  
 - 有丰富第三方生态进行扩展  
 - 完全兼容unittest  
 
@@ -61,6 +61,8 @@ pip show pytest  # 查看pytest信息
 pytest  # 启动测试框架  
 ```
 
+***
+
 ### 2. 编写测试用例
 
 1. 创建：`test_`开头的py文件  
@@ -76,6 +78,8 @@ def test_fail():
     assert 1 == 2  # 测试失败
 ```
 
+***
+
 ### 3. 执行测试用例
 
 1. 命令行  
@@ -88,6 +92,8 @@ def test_fail():
     import pytest
     pytest.main()  # 启动测试框架
     ```
+
+***
 
 ### 4. 看懂执行结果
 
@@ -119,20 +125,26 @@ def test_fail():
 
 4. 用例失败原因  
     ```
-    --- FAILURES
-    test_fail
+    ================================== FAILURES
+    ===================================
+    __________________________________ test_fail
+    __________________________________
     def test_fail():
-       assert 1 == 2  # 测试失败
-    E    assert 1 == 2
+    > assert 1 == 2 # 测试失败
+    E assert 1 == 2
     test_abc.py:6: AssertionError
     ```
-
+    
 5. 测试框架总结信息  
     ```
-    --- short test summary info
+    =========================== short test summary info
+    ===========================
     FAILED test_abc.py::test_fail - assert 1 == 2
-    --- 1 failed, 1 passed in 0.03s
+    ========================= 1 failed, 1 passed in 0.03s
+    =========================
     ```
+
+***
 
 ### 5. 用例发现规则
 
@@ -145,8 +157,6 @@ pytest识别、加载测试用例过程称之为用例发现，规则：
 4. 收集 `test_`开头的函数或者方法，作为测试用例  
 
 **重点**：pytest，只有函数和方法，才被视为测试用例，目录、文件、类，作为用例的容器  
-
----
 
 ## 3. pytest高级用法
 
@@ -162,14 +172,20 @@ pytest 有2种配置方式：
 pytest -h  
 ```
 
+可以分成三大部分
+1. 参数
+2. 配置项
+3. 环境变量
+
 常用的命令行参数：  
+
 - `-v`：增加详细程度  
 - `-q`：减少详细程度  
 - `-s`：不进行内容捕获，才能正常的输入输出  
 - `-x`：快速退出（冒烟测试）  
 
 常用的ini配置项：  
-1. 在根目录中的键 `pytest.ini` 文件  
+1. 在根目录中的创建 `pytest.ini` 文件  
 2. 创建 pytest 选择器  
 3. 按行，添加配置项  
 
@@ -179,7 +195,13 @@ pytest -h
 addopts = -s -x
 ```
 
+add options
+
+配置是用来改变pytest
+
 **约定大于配置**：对于成熟的工具来说，默认配置往往是比较好的配置，可以适用于大部分场景。如非必要，请勿更改。  
+
+***
 
 ### 2. 标记mark
 
@@ -317,7 +339,7 @@ def test_add_1_1(a, b, c):
 
 1. 创建函数  
 2. 添加装饰器  
-3. yield  
+3. `yield`  
 
 ```python
 @pytest.fixture  
@@ -423,8 +445,12 @@ class Test_A:
 2. setUpModule / tearDownModule  
 3. setup_module / teardown_module  
 
-第一种是测试框架 nose 的写法，**pytest 从 7.2.0 开始不再兼容 nose 框架**，这种写法无了一种是测试框架 unittest 的写法，这是 python 的标准库，应该会一直兼容下去  
-第二种是测试框架 pytest 的写法，是仿 xunit 风格，使用非面向对象的方式来创建夹具在实际的运行过程中，所有的写法都会统一处理成 fixture，**建议一步到位直接写 fixture**
+第一种是测试框架 nose 的写法，**pytest 从 7.2.0 开始不再兼容 nose 框架**，这种写法无了
+
+第二种是测试框架 unittest 的写法，这是 python 的标准库，应该会一直兼容下去
+第三种是测试框架 pytest 的写法，是仿 xunit 风格，使用非面向对象的方式来创建夹具在实际的运行过程中，所有的写法都会统一处理成 fixture，**建议一步到位直接写 fixture**
+
+***
 
 ## 2. pytest常用插件
 
@@ -544,6 +570,8 @@ result_log_level_separator = warning
 result_log_level_verbose = info
 ```
 
+pycharm插件：Ideolog（日志颜色）
+
 ### 6. allure-pytest
 
 用途：生成allure数据文件
@@ -567,11 +595,7 @@ pip install allure-pytest
 2. 清空目录内容
 3. 在目录中创建数据文件
 
-```
-
-```
-
-
+***
 
 ## 3. 定制企业级的测试报告
 
@@ -584,12 +608,12 @@ allure-pytest > 数据文件 > allure > 测试报告
 
 1. JDK
 
-下载地址：https://www.oracle.com/java/technologies/downloads/#jdk17-windows
+​	下载地址：https://www.oracle.com/java/technologies/downloads/#jdk17-windows
 
-安装：双击运行、安装、重启
-版本：建议 JDK 17+
+​	安装：双击运行、安装、重启
+​	版本：建议 JDK 17+
 
-验证：
+​	验证：
 
 ```
 java --version
@@ -597,14 +621,14 @@ java --version
 
 2. allure源程序
 
-下载地址：https://github.com/allure-framework/allure2/releases
+​	下载地址：https://github.com/allure-framework/allure2/releases
 
-解压：E:\abc\allure-2.24.1\allure-2.24.1\bin
+​	解压：E:\abc\allure-2.24.1\allure-2.24.1\bin
 
-修改环境变量：PATH
+​	修改环境变量：PATH
 
-验证：allure
-E:\abc\allure-2.24.1\allure-2.24.1\bin\allure
+​	验证：allure
+​	E:\abc\allure-2.24.1\allure-2.24.1\bin\allure
 
 ### 2. 生成企业级测试报告
 
@@ -671,7 +695,7 @@ def test_bbc():
 
 #### 2. 自定义logo
 
-1. 确定插件的名称 custom-logo-plugin
+1. 确定插件的名称 `custom-logo-plugin`
 
 2. 修改配置文件: "E:\abc\allure-2.24.l\allure-2.24.l\config\allure.yml"
 
@@ -771,11 +795,12 @@ YAML是一个完全兼容JSON的数据格式。
 2. 语法更加简洁，支持注释  
 3. 和Python风格相似  
 
----
-
 ### 1. 序列化：Python转YAML
 
 **将Python数据转为JSON文件：**  
+
+https://tw.unicodery.com/5b57.html
+
 ```python
 data = {
     "数字": [1, -1, 1.2],
@@ -788,8 +813,8 @@ data = {
 
 import json
 
-s = json.dumps(data, ensure_ascii=False)  # Python转JSON字符串
-
+s = json.dumps(data, ensure_ascii=False)  # Python转JSON字符串,且不将非 ASCII 字符转义为 Unicode 转义序列
+#dumps是从字符串中加载数据，dump是从文件中加载数据
 with open("data.json", "w", encoding="utf-8") as f:
     f.write(s)  # 创建JSON文件
 ```
@@ -817,8 +842,6 @@ with open("data.yaml", "w", encoding="utf-8") as f:
     f.write(s)  # 创建YAML文件
 ```
 
----
-
 ### 2. 反序列化：YAML转Python
 
 **将JSON转为Python：**  
@@ -828,7 +851,7 @@ import json
 with open("data.json", encoding="utf-8") as f:
     s = f.read()  # 得到字符串
     data_json = json.loads(s)  # 得到数据
-
+#loads是从字符串中加载数据，load是从文件中加载数据
 print(data_json)  # Python数据
 ```
 
@@ -842,8 +865,6 @@ with open("data.yaml", encoding="utf-8") as f:
 
 print(data_yaml)  # Python数据
 ```
-
----
 
 ### 3. YAML特色
 
@@ -901,9 +922,20 @@ with open("ddt_data.yaml", encoding="utf-8") as f:
 )
 def test_add(a, b, c):
     assert add(a, b) == c
+#同样的代码，同样的变量名，不会互相影响    
+with open("data.yaml", encoding="utf-8") as f:
+    s = f.read() # 字符串
+	data_yaml = yaml.safe_load(s) # 数据
+@pytest.mark.parametrize(
+	"s",
+	data_yaml
+)
+def test_add_str(s):
+	pass
 ```
 
 **YAML文件内容（ddt_data.yaml）：**  
+
 ```yaml
 - [1, 1, 2]
 - [2, 2, 4]
@@ -923,13 +955,13 @@ pytest是通用的测试框架，适用于：
 - 黑盒测试（API、Web、App）  
 
 **文件路径获取：**  
-| 类型                   | 示例            |
-| ---------------------- | --------------- |
-| Absolute Path          | `Ctrl+S`        |
-| File Name              | `ddt_data.yaml` |
-| Path From Content Root | `Toolbox URL`   |
 
-**目录结构：**  
+![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2025-06-30/20250630121339-ddcff7.png)
+
+![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2025-06-30/20250630121506-795a4e.png)
+
+**通用的黑盒测试框架：**  
+
 ```
 commons/      # 常用代码目录
 data/         # 数据目录
