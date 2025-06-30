@@ -435,10 +435,16 @@ https://pypi.org/
 用途：生成HTML测试报告  
 文档：https://pytest-html.readthedocs.io/en/latest/installing.html  
 安装：  
-`pip install pytest-html`  
+
+```
+pip install pytest-html
+```
 
 配置：命令行参数  
-`--html=report.html --self-contained-html`
+
+```
+--html=report.html --self-contained-html
+```
 
 ### 2. pytest-xdist
 
@@ -446,10 +452,16 @@ https://pypi.org/
 文档：https://pytest-xdist.readthedocs.io/en/stable/  
 
 安装：  
-`pip install pytest-xdist`  
+
+```
+pip install pytest-xdist
+```
 
 配置：命令行参数  
-`-n {0,1,2,3,...,n, auto}`  
+
+```
+-n {0,1,2,3,...,n, auto}
+```
 
 注意：  
 1. 多进程额外增加资源  
@@ -463,7 +475,10 @@ https://pypi.org/
 文档：https://pytest-order.readthedocs.io/en/latest/  
 
 安装：  
-`pip install pytest-order`  
+
+```
+pip install pytest-order
+```
 
 配置：标记  
 ```python
@@ -489,11 +504,15 @@ def test_bbc():
 
 安装：
 
-`pip install pytest-rerunfailures`
+```
+pip install pytest-rerunfailures
+```
 
 配置：命令行参数
 
-`--reruns 5 --reruns-delay 1`
+```
+--reruns 5 --reruns-delay 1
+```
 
 ### 5. pytest-result-log
 
@@ -503,9 +522,11 @@ def test_bbc():
 
 安装：
 
-`pip install pytest-result-log`
+```
+pip install pytest-result-log
+```
 
-配置：
+配置：pytest.ini
 
 ```
 log_file = ./pytest.log
@@ -531,11 +552,15 @@ result_log_level_verbose = info
 
 安装：
 
-`pip install allure-pytest`
+```
+pip install allure-pytest
+```
 
 配置：命令行参数
 
-`--alluredir=temps --clean-alluredir`
+```
+--alluredir=temps --clean-alluredir
+```
 
 本插件只生成数据，不生成报告：
 1. 创建目录 temps
@@ -558,7 +583,11 @@ allure-pytest > 数据文件 > allure > 测试报告
 安装：双击运行、安装、重启
 版本：建议 JDK 17+
 
-验证：`java --version`
+验证：
+
+```
+java --version
+```
 
 2. allure源程序
 
@@ -582,6 +611,11 @@ serve = generate + open
 ```
 E:\abc\allure-2.24.1\allure-2.24.1\bin\allure generate -o report temps # 根据数据生成HTML报告
 E:\abc\allure-2.24.1\allure-2.24.1\bin\allure open report # 打开生成的HTML报告
+```
+
+```
+allure generate -o report temps # 根据数据生成HTML报告
+allure open report # 打开生成的HTML报告
 ```
 
 ### 3. 定制报告内容
@@ -653,7 +687,23 @@ def test_bbc():
 }
 ```
 
+### 将常用包打包成 requirements.txt
 
+如果你希望保持每个项目独立，但又不想手动一个个安装依赖，可以：
+
+在原项目中导出依赖：
+
+```bash
+pip freeze > requirements.txt
+```
+
+新建项目后，在终端运行：
+
+```bash
+pip install -r requirements.txt
+```
+
+这样就能快速恢复所有依赖。
 
 # 三、接口自动化基础之Pytest框架之YAML详解以及Parametrize数据驱动(day15)
 
