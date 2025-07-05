@@ -197,8 +197,6 @@ selenium底层原理：
 
 
 
-
-
 # 二、Web自动化Selenium浏览器控制及元素控制
 
 **项目地址：http://101.34.221.219:8010/**
@@ -338,14 +336,6 @@ print(a.tag_name)                  # 元素标签名（如：input）
 print(a.get_attribute("type"))     # 获取属性值（如：text）
 ```
 
-
-
-
-
-
-
-
-
 # 三、Web自动化元素定位及定位等待解决定位失败
 
 ## 1. 元素定位方法
@@ -363,17 +353,13 @@ from selenium.webdriver.common.by import By
 
 with webdriver.Chrome() as driver:
     driver.maximize_window()
-    driver.get("http://101.34.221.219:8010/?s=user/logininfo.html")
-    
+    driver.get("http://116.62.63.211/shop/user/loginInfo.html")
     # 输入账号
-    driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[1]/input').send_keys("beifan_1205")
-    
+    driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[1]/input').send_keys("lyreth")
     # 输入密码
-    driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[2]/div/input').send_keys("beifan_1205")
-    
+    driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[2]/div/input').send_keys("123456")
     # 点击登录
     driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[3]/button').click()
-    
     input("暂停执行")  # 等待用户输入
 ```
 
@@ -381,11 +367,17 @@ with webdriver.Chrome() as driver:
 
 ## 2. 元素定位策略
 
-### 支持的定位策略（`By`类）
+过去：8种
+现在：5种
+将来：4种 （推测）
+
+### 查看代码
+
 ```python
-from selenium.webdriver.common.by import By
+# selenium.webdriver.common.by.By
 
 class By:
+    """Set of supported locator strategies."""
     ID = "id"                   # 通过id属性
     XPATH = "xpath"             # 通过XPath表达式
     LINK_TEXT = "link text"     # 通过超链接文本（精确匹配）
@@ -396,13 +388,51 @@ class By:
     CSS_SELECTOR = "css selector"  # 通过CSS选择器
 ```
 
-### 策略选择建议
-- **CSS选择器**：  
-  - 适用于简单、高性能场景，兼容性好。  
-  - 无法直接实现文本匹配（如`LINK_TEXT`）。  
-- **XPath**：  
-  - 功能强大，支持复杂逻辑（如父节点定位、文本匹配）。  
-  - 语法灵活但执行速度略慢。  
+```python
+# selenium.webdriver.remote.webdriver.WebDriver.find_element
+    if by == By.ID:
+        by = By.CSS_SELECTOR
+        value = f'[id="{value}"]'
+    elif by == By.CLASS_NAME:
+        by = By.CSS_SELECTOR
+        value = f".{value}"
+    elif by == By.NAME:
+        by = By.CSS_SELECTOR
+        value = f'[name="{value}"]'
+```
+
+**以下策略：不可以被CSS取而代之**
+
+- XPATH
+- LINK_TEXT
+- PARTIAL_LINK_TEXT
+
+**CSS和XPATH：**
+
+1. 开发工具
+2. 选择元素
+3. 右键复制
+
+**LINK_TEXT和PARTIAL_LINK_TEXT**
+
+- 记录A标签中的显示文本
+- 调用find_element
+
+```python
+driver.get('http://101.34.221.219:8010/?s=user/logininfo.html')
+# driver.find_element(By.LINK_TEXT, '注册').click() # 对A标签文本内容 精确匹配
+driver.find_element(By.PARTIAL_LINK_TEXT, '注').click() # 对A标签文本内容 模糊匹配
+```
+
+**CSS or Xpath？**
+
+- 相同点：  
+  - 网页中用一个元素，既可以被CSS定位，也可以被XPATH定位
+  - 
+    在Chrome底层，CSS选择器和XPATH都是通过JS实现
+- 不同点：
+  - CSS选择器在所有的浏览器中被支持，执行速度有保障  
+  - CSS无法完成复杂的元素定位（比如：实现LINK_TEXT、定位到父元素），往往需要JS配合
 
 **示例：文本匹配**  
 ```python
@@ -414,7 +444,10 @@ driver.find_element(By.PARTIAL_LINK_TEXT, '注').click()  # 模糊匹配
 
 ## 3. XPath语法详解
 
+XPATH 是XML的查询语言，支持逻辑判断、函数调用
+
 ### 基础语法
+
 - **路径符号**：  
   - `/`：根路径或子节点。  
   - `//`：任意层级。  
@@ -432,21 +465,121 @@ driver.find_element(By.PARTIAL_LINK_TEXT, '注').click()  # 模糊匹配
 
 ### 常用函数
 - `text()`：匹配元素文本。  
-- `contains()`：判断文本是否包含指定内容。  
+
+  ```xpath
+  //a[text()="登录"] 等同于 LINK_TEXT
+  ```
+
+  `contains()`：判断文本是否包含指定内容。  
+
+  ```xpath
+  //*[contains(text(),"登")] 等同于 PARTIAL_LINK_TEXT
+  ```
+
 - `starts-with()`：判断文本是否以指定内容开头。  
+
+  ```xpath
+  //*[starts-with(text(),"登")]
+  ```
+
+不是所有的XPATH函数都被浏览器支持
 
 ---
 
 ## 4. 元素定位失败原因及解决方案
 
-### 常见问题
-1. **元素未加载**：  
-   - 解决方案：添加显式等待（如`time.sleep`或`WebDriverWait`）。  
-2. **定位表达式错误**：  
+### 常见原因
+
+1. **元素不存在**：尚未加载或已经消失
+
+   ex：弹出的提示框
+
+   解决方案：添加等待（如`time.sleep`，`input("暂停执行")`或`WebDriverWait`）。  
+
+   ```python
+   #码尚商城的登录成功提示框
+   with get_webdriver('chrome') as driver:
+       # 访问登录页面
+       driver.get('http://116.62.63.211/shop/user/loginInfo.html')
+       # 定位账号输入框
+       driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[1]/input').send_keys(
+           "lyreth")
+       # 定位密码输入框
+       driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[2]/div/input').send_keys(
+           "123456")
+       # 点击登录按钮                   /html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[3]/button
+       driver.find_element(By.XPATH, '/html/body/div[4]/div/div[2]/div[2]/div/div/div[1]/form/div[3]/button').click()
+       # / html / body / div[10] / div / p
+       time.sleep(1)
+       el = driver.find_element(By.XPATH, '/html/body/div[10]/div/p')
+       print(el.text)
+       input()
+   ```
+
+   
+
+2. **元素存在，定位不到**：
+
+   ex:id发生变化
+
+   解决方案：手动写Xpath路径
+
+   ```python
+   with get_webdriver() as driver:
+       # driver.maximize_window()
+       driver.get('https://element-plus.org/zh-CN/component/form.html#%E5%85%B8%E5%9E%8B%E8%A1%A8%E5%8D%95')
+       # input("暂停执行")
+       # //*[@id="el-id-6164-140"] //*[@id="el-id-6722-140"]
+       el = driver.find_element(By.XPATH, '//*[@id="page-content"]/div/div/div[1]/div/div[2]/div[1]/form/div[1]/div/div/div/input') # no such element:
+       el.send_keys("123")
+       input("暂停执行") # 等待输入
+   ```
+
+3. **定位成功，不能交互**：被遮挡
+
+   ```python
+   with get_webdriver() as driver:
+   
+       driver.get('http://116.62.63.211/shop/goods/index/id/5.html')
+       el = driver.find_element(By.XPATH,'/html/body/div[4]/div[2]/div[2]/div/div[3]/div[2]/button[1]') # no such element:
+       el.click() # 可以成功，但会产生遮挡
+       el = driver.find_element(By.LINK_TEXT, '注册')
+       # el.click() # 失败
+       driver.execute_script("arguments[0].click()", el) # js模拟点击 arguments[0]表示传入参数的第一个，el表示传入的参数，此时el被注册覆盖，因此传入的是注册按钮
+       input("暂停执行") # 等待输入
+   ```
+
+   
+
+4. **可以交互，没有效果**：元素内容、状态不对
+
+   ```python
+   with get_webdriver() as driver:
+       driver.maximize_window()
+       driver.get('https://element-plus.org/zh-CN/component/checkbox.html#%E5%9F%BA%E7%A1%80%E7%94%A8%E6%B3%95')
+       el_a = driver.find_element(By.XPATH,'//*[@id="page-content"]/div/div/div[1]/div/div[1]/div[1]/div[4]/label[1]/span[1]/input') # no such element:
+       el_b = driver.find_element(By.XPATH,'//*[@id="page-content"]/div/div/div[1]/div/div[1]/div[1]/div[4]/label[1]/span[2]')
+       el_b.click() # 不报错，但没效果
+       input("暂停执行") # 等待输入
+       driver.execute_script('''arguments[0].removeAttribute("disabled")''', el_a)
+       # 修改元素状态
+       el_b.click() # 不报错，有效果
+       input("暂停执行") # 等待输入
+   ```
+
+   
+
+​	
+
+
+
+
+
+1. **定位表达式错误**：  
    - 解决方案：使用开发者工具验证XPath/CSS。  
-3. **元素被遮挡**：  
+2. **元素被遮挡**：  
    - 解决方案：通过JavaScript绕过遮挡（如`execute_script("arguments[0].click()", element)`）。  
-4. **元素状态无效**：  
+3. **元素状态无效**：  
    - 解决方案：修改元素属性（如移除`disabled`状态）。  
 
 **示例：处理遮挡和状态问题**  
@@ -474,17 +607,64 @@ el_a.send_keys("123")
 
 
 
+## 6. 定位等待策略
 
+元素尚未出现，或者已经消失
 
+### 1. 强制等待
+```python
+input("暂停执行") # 需要人工干预，才能恢复
+time.sleep(5) # 暂停固定的时间，随后自动恢复执行
+```
 
+- **优点**：简单直接。
+- **缺点**：效率低，无法动态响应元素加载
 
+### 2. 隐式等待
 
+```python
+driver.implicitly_wait(20)  # 全局等待最多20秒
+```
 
+- **优点**：提前出现，提前结束等待，全局生效。
+- **缺点**：仅判断元素是否存在，灵活性差。
 
+### 3. 显式等待（推荐）
 
+```python
+def func(d):
+    print('显示等待，正在重试...')
+    el = driver.find_element(By.XPATH, '//p[@class="prompt-msg"]')
+    if el.text:
+    	return el.text # 返回结果，提前结束等待
+    else:
+    	return False # 返回假值，继续重试
+from selenium.webdriver.support.wait import WebDriverWait
+msg = WebDriverWait(driver, 10).until(func) # 函数不加括号
+# WebDriverWait，拿着 driver 不断的调用 func，把结果保存到 msg
+```
 
+简化版
 
+```python
+from selenium.webdriver.support.wait import WebDriverWait
+msg = WebDriverWait(driver, 10).until(
+lambda d: driver.find_element(By.XPATH, '//p[@class="prompt-msg"]').text)
+# 函数不加括号
+```
 
+- **优点**：灵活控制等待条件（如文本内容、元素属性等）。
+- **缺点**：需熟悉Python和Selenium。
+
+原理：
+- 创建一个函数，被selenium调用，如果没有满足结束条件就不断重试，如果满足了就提前结束
+
+函数额外要求：
+
+1. 必须有一个参数：driver
+2. 返回值：真 或者 假
+  - 如果为真，提前结束等待
+  - 如果为假，继续重试
 
 
 

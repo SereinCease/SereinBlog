@@ -270,25 +270,564 @@ print(resp.json())    # 将JSON文本反序列化为字典
 
 ### 3. 微信公众号项目  
 
+```python
+import random
+import time
+
+import requests
+import json
+
+g_var = {}
+# 1.获取鉴权码access token接口
+def test_get_token():
+    res = requests.request(
+        method='get',
+        url="https://api.weixin.qq.com/cgi-bin/token",
+        params={
+            "grant_type": "client_credential",
+            "appid": "",
+            "secret": ""
+        }
+    )
+
+    assert res.status_code == 200
+    access_token = res.json()["access_token"]
+    assert access_token != ""
+    g_var["access_token"]= access_token # 保存变量，为了其他接口使用
+
+
+# 2.获取公众号已创建的标签接口
+def test_get_tags():
+    res = requests.request(
+        method='get',
+        url="https://api.weixin.qq.com/cgi-bin/tags/get",
+        params={
+            "access_token": g_var["access_token"]
+        }
+    )
+
+    assert res.status_code == 200
+    tags = res.json()["tags"]
+    assert tags
+    assert tags[0]['id'] == 2
+
+# 3.创建标签接口
+def test_create_tags():
+    timestamp = str(time.time())
+    res = requests.request(
+        method='post',
+        url="https://api.weixin.qq.com/cgi-bin/tags/create",
+        params={
+            "access_token": g_var["access_token"]
+        },
+        json={"tag":{"name":"熊" + timestamp}}
+    )
+
+    assert res.status_code == 200
+    s = res.text.replace("\\\\","\\")
+    res_json = json.loads(s)#替换后手动进行反序列化，将字符串转换为json
+    name = res_json["tag"]['name']
+    id = res_json["tag"]['id']
+    g_var['tag_id'] = id
+    assert name == "熊" + timestamp
+    assert isinstance(id,int)
+    
+    
+
+# 4.编辑标签接口
+def test_edit_tags():
+    timestamp = str(time.time())
+    res = requests.request(
+        method='post',
+        url="https://api.weixin.qq.com/cgi-bin/tags/update",
+        params={
+            "access_token": g_var["access_token"]
+        },
+        json={"tag": {"id":g_var['tag_id'],"name":"happy"+timestamp}}
+    )
+
+    assert res.status_code == 200
+    assert res.json()['errcode'] == 0
+    assert res.json()['errmsg'] == 'ok'
+
+# 5.删除标签接口
+def test_del_tags():
+    res = requests.request(
+        method="post",
+        url="https://api.weixin.qq.com/cgi-bin/tags/delete",
+        params={
+            'access_token':g_var['access_token']
+        },
+        json= {"tag":{"id":g_var["tag_id"]}}
+    )
+    assert res.status_code ==200
+    assert res.json()['errcode'] == 0
+    assert res.json()['errmsg'] == 'ok'
+
+# 6.文件上传接口
+def test_file_upload():
+    res = requests.request(
+        method="post",
+        url="https://api.weixin.qq.com/cgi-bin/media/uploadimg",
+        params={
+            'access_token': g_var['access_token']
+        },
+        files={
+            "media":open("data/shu.png","rb")
+        }
+    )
+    assert res.status_code == 200
+    url = res.json()['url']
+    assert 'http' in url
+    assert 'mmbiz.qpic.cn' in url
 ```
 
+创建接口时断言发生问题
+
+```
+AssertionError: assert '\\u718a1751596032.4772298' == '熊1751596032.4772298'
+```
+
+```python
+print(res.content)
+print(res.text)
+print(res.json())
+#打印出的结果
+{"tag":{"id":194,"name":"\\\\u718a1751596032.4772298"}}
+{"tag":{"id":194,"name":"\\u718a1751596032.4772298"}}
+{'tag': {'id': 194, 'name': '\\u718a1751596032.4772298'}}
+```
+
+使用``s.replace("\\\\","\\")` 将\\\u718a1751596032.4772298变为\\u718a1751596032.4772298，就变成了Unicode编码格式
+
+# 五、接口自动化测试框架之requests封装（day17）
+
+## 1. 回顾项目特点
+
+1. 大部分的用例由以下几步骤  
+   - 发送请求  
+   - 提取数据  
+   - 断言数据  
+2. 大部分的用例需要相同参数值（身份凭据）  
+
+**封装目的**：通过隐藏细节减少重复步骤，降低使用难度，增加新特性。
+
+---
+
+## 2. 封装请求类
+
+### 1. HTTP报文日志
+```python
+import requests  
+import logging  
+
+logger = logging.getLogger('request_utils')  # 日志记录器  
+
+class RequestUtils:  
+    sess = requests.Session()  # 实例化Session  
+
+    def send_request(self, **kwargs):   # 统一参数类型，仅限关键字参数
+        logger.info('正在发送请求...')  
+        for k, v in kwargs.items():  
+            logger.info(f'	参数内容: {k}={v}')  
+
+        resp = self.sess.request(**kwargs)  # 发送请求  # 参数长度、内容是不确定
+        logger.info('收到接口响应')  
+        logger.info(f'状态码={resp.status_code}')  
+        logger.info(f'响应头={resp.headers}')  
+        logger.info(f'	响应正文={resp.text}')  
+        return resp
+```
+
+### 2. 自动添加公共参数
+```python
+class RequestUtils:
+    sess = requests.Session()  # 实例化
+    public_params = {}  # 公共参数字典  
+
+    def send_request(self, **kwargs):  # 统一参数类型，仅限关键字参数
+        logger.info('正在发送请求...')
+        for k, v in kwargs.items():  
+            if k == 'params':
+                v.update(self.public_params) # 合并参数内容，把public_params合并到params中
+            logger.info(f'	参数内容: {k}={v}')  
+```
+
+### 3. 简化文件上传
+```python
+class RequestUtils:
+    sess = requests.Session() # 实例化
+    pubilc_params = {}
+    def send_request(self, **kwargs):
+        # 统一参数类型，仅限关键字参数
+        logger.info('正在发送请求...')
+        for k, v in kwargs.items():
+            if k == 'params':
+                v.update(self.pubilc_params) # 使用属性中的字典，修改本次参数
+            elif k == 'files':
+                for name, file in v.itemn():
+                    v[name] = open(file, "rb") # 二进制方式打开文件
+```
+
+## 3. 使用YAML数据驱动测试
+
+参数和返回值，结构相似的情况下，才适合数据驱动测试
+
+- 创建标签
+- 编辑标签
+
+### 完整代码
+
+打开数据文件封装函数
+
+```python
+def to_yaml(path):
+    with open(path,encoding="utf-8") as f:
+        s = f.read()
+        data_yaml = yaml.safe_load(s)
+    return data_yaml
+
+```
+
+使用`ddt_creat_tag.yaml`和`ddt_edit_tag_fail.yaml`分别对创建标签和编辑标签进行数据驱动测试
+
+`request_utils.py`代码
+
+```python
+import requests
+import logging
+
+logger = logging.getLogger("request_utils") #日志记录器
+
+class RequestUtils:
+    sess = requests.session()
+    pubilc_params = {}  # 定义公共参数
+    opened_files=[] #创建一个打开文件的列表，用于接口请求完成后关闭文件
+    def send_request(self,**kwargs):
+        logger.info('正在发送请求...')
+        params=kwargs.get('params',{}) #使用get方法，当不存在params时会创建params且默认值为{}
+        params.update(self.pubilc_params) # 使用属性中的字典，修改本次参数
+        kwargs['params'] = params #当参数中没有params时需要添加params键来更新kwargs
+        files = kwargs.get('files',{})
+        for name, file_path in files.items():
+            if isinstance(file_path, str):
+                file_obj = open(file_path, "rb")
+                files[name] = file_obj
+                self.opened_files.append(file_obj) #写入列表
+        kwargs['files'] = files
+        for k, v in kwargs.items():
+            logger.info(f'  参数内容: {k}={v}')
+        res = self.sess.request(**kwargs)  # 发送请求  # 参数长度、内容是不确定
+        logger.info('收到接口响应')
+        logger.info(f'  状态码={res.status_code}')
+        logger.info(f'  响应头={res.headers}')
+        logger.info(f'  响应正文={res.text}')
+        for f in self.opened_files:
+            f.close()
+        return res
+```
+
+测试用例代码
+
+```python
+import logging
+import time
+import pytest
+
+from commons.request_utils import RequestUtils
+from commons.aaa import to_yaml
+import json
+
+#g_var = {} #全局变量函数
+logger = logging.getLogger('ddt')
+ddt_create_tag = to_yaml('data/ddt_creat_tag.yaml')
+logger.info(f'data_ddt_create_tag={ddt_create_tag}')
+ddt_edit_tag_fail = to_yaml('data/ddt_edit_tag_fail.yaml')
+logger.info(f'ddt_edit_tag_fail={ddt_edit_tag_fail}')
+# 创建fixture，在所有用例结束后执行，用于删除标签
+@pytest.fixture(scope='session')
+def del_tags():
+
+    yield
+    print('所有用例都执行完毕，开始删除测试数据')
+    logger.info('所有用例都执行完毕，开始删除测试数据')
+    res = RequestUtils().send_request(
+        method='get',
+        url="https://api.weixin.qq.com/cgi-bin/tags/get",
+
+    )
+    tags = res.json()['tags'] #返回数据先转换为json，获取到tags列表
+    for tag_name in ddt_create_tag: #外层循环，遍历已经创建的标签名
+        tagId = '000' #设定了一个默认值
+        for tag in tags: #内层循环，遍历tags列表
+            if tag_name == tag['name']: #名字与创建的标签名匹配就获取id值
+                tagId = tag['id']
+        if tagId == '000': #如果是默认值就跳过本次循环
+            continue
+        RequestUtils().send_request(
+            method="post",
+            url="https://api.weixin.qq.com/cgi-bin/tags/delete",
+
+            json={"tag": {"id": tagId}}
+        )
+
+
+# 1.获取鉴权码access token接口
+def test_get_token():
+    res = RequestUtils().send_request(
+        method='get',
+        url="https://api.weixin.qq.com/cgi-bin/token",
+        params={
+            "grant_type": "client_credential",
+            "appid": "wx180cd14b59813610",
+            "secret": "0a0ac08da6958e499c4f8695db3f7697"
+        }
+    )
+
+    assert res.status_code == 200
+    access_token = res.json()["access_token"]
+    RequestUtils.pubilc_params['access_token'] = access_token
+    # g_var["access_token"]= access_token # 保存变量，为了其他接口使用
+    assert access_token != ""
+
+
+# 2.获取公众号已创建的标签接口
+def test_get_tags():
+    res = RequestUtils().send_request(
+        method='get',
+        url="https://api.weixin.qq.com/cgi-bin/tags/get",
+
+    )
+
+    assert res.status_code == 200
+    tags = res.json()["tags"]
+    assert tags
+    assert tags[0]['id'] == 2
+
+
+# 3.创建标签接口
+# 参数化
+@pytest.mark.parametrize(
+    "name",
+    ddt_create_tag
+)
+def test_create_tags(name,del_tags):
+    timestamp = str(time.time())
+    res = RequestUtils().send_request(
+        method='post',
+        url="https://api.weixin.qq.com/cgi-bin/tags/create",
+
+        json={"tag": {"name": name}}
+    )
+
+    assert res.status_code == 200
+    s = res.text.replace("\\\\", "\\")
+    res_json = json.loads(s)  # 替换后手动进行反序列化，将字符串转换为json
+    tag_name = res_json["tag"]['name']
+    tag_id = res_json["tag"]['id']
+    g_var['tag_id'] = tag_id
+    assert tag_name == name
+    assert isinstance(tag_id, int)
+
+
+# 4.编辑标签接口
+def test_edit_tags():
+    timestamp = str(time.time())
+    res = RequestUtils().send_request(
+        method='post',
+        url="https://api.weixin.qq.com/cgi-bin/tags/update",
+
+        json={"tag": {"id": g_var['tag_id'], "name": "学习" + timestamp}}
+    )
+
+    assert res.status_code == 200
+    assert res.json()['errcode'] == 0
+    assert res.json()['errmsg'] == 'ok'
+
+@pytest.mark.parametrize(
+    "name,code",
+    ddt_edit_tag_fail
+)
+def test_edit_tags_fail(name,code):
+
+    res = RequestUtils().send_request(
+        method='post',
+        url="https://api.weixin.qq.com/cgi-bin/tags/update",
+
+        json={"tag": {"id": g_var['tag_id'], "name": name }}
+    )
+
+    assert res.status_code == 200
+    assert res.json()['errcode'] == code
+
+
+
+
+# 5.删除标签接口
+def test_del_tags():
+    res = RequestUtils().send_request(
+        method="post",
+        url="https://api.weixin.qq.com/cgi-bin/tags/delete",
+
+        json={"tag": {"id": g_var["tag_id"]}}
+    )
+    assert res.status_code == 200
+    assert res.json()['errcode'] == 0
+    assert res.json()['errmsg'] == 'ok'
+
+
+# 6.文件上传接口
+def test_file_upload():
+    res = RequestUtils().send_request(
+        method="post",
+        url="https://api.weixin.qq.com/cgi-bin/media/uploadimg",
+
+        files={
+            "media": "data/shu.png"
+        }
+    )
+    assert res.status_code == 200
+    url = res.json()['url']
+    assert 'http' in url
+    assert 'mmbiz.qpic.cn' in url
+
 ```
 
 
 
+# 六、接口自动化测试框架之电商接口项目实战（day18）
 
+## 1. 电商接口项目实战
 
+### 1. 接口约定
+**基础URL**： 
+`http://116.62.63.211/shop/api.php`  
 
+**查询字符串参数**：  
+| 参数名                  | 说明                          | 必填 |
+|-------------------------|-------------------------------|------|
+| `s`                     | 接口名称                      | 是   |
+| `application`           | 请求应用（web/app）           | 是   |
+| `application_client_type`| 客户端类型（ios/android/weixin/alipay） | 是   |
+| `token`                 | 身份凭据                      | 否   |
+| `ajax`                  | Web端异步请求标识             | 否   |
 
+**参数**：JSON  
 
+**响应**：JSON（包含字段：`code`, `msg`, `data`）  
 
+---
 
+### 2. 获取Token（其他用例的依赖）
+```python
+from commons.request_utils import RequestUtils
 
+def test_get_token():
+    resp = RequestUtils().send_request(
+        method="post",
+        url="http://101.34.221.219:8010/api.php",
+        params={
+            "s": "user/login",
+            "application": "app",
+            "application_client_type": "ios",
+        },
+        json={
+            "accounts": "beifan_1205",
+            "pwd": "beifan_1205",
+            "type": "username"
+        }
+    )
+    
+    code = resp.json()['code']
+    token = resp.json()['data']['token']
+    
+    assert code == 0
+    assert token != ""
+    
+    # 设置全局公共参数
+    RequestUtils.public_params = {
+        "application": "app",
+        "application_client_type": "ios",
+        "token": token
+    }
+```
 
+---
 
+### 3. 商品收藏功能测试用例
+#### (1) 收藏商品
+```python
+def test_goods_favor():
+    resp = RequestUtils().send_request(
+        method="post",
+        url="http://101.34.221.219:8010/api.php",
+        params={"s": "goods/favor"},
+        json={"id": 2, "is_mandatory_favor": 1}
+    )
+    
+    code = resp.json()['code']
+    assert code == 0
+```
 
+#### (2) 验证收藏列表
+```python
+def test_usergoodsfavor_index_after_favor():
+    resp = RequestUtils().send_request(
+        method="post",
+        url="http://101.34.221.219:8010/api.php",
+        params={"s": "usergoodsfavor/index"}
+    )
+    
+    code = resp.json()['code']
+    text = resp.text
+    assert code == 0
+    assert '"goods_id":"2"' in text  # 验证商品ID=2存在
+```
 
+#### (3) 取消收藏
+```python
+def test_usergoodsfavor_cancel():
+    resp = RequestUtils().send_request(
+        method="post",
+        url="http://101.34.221.219:8010/api.php",
+        params={"s": "usergoodsfavor/cancel"},
+        json={"id": "2"}
+    )
+    
+    code = resp.json()['code']
+    msg = resp.json()['msg']
+    assert code == 0
+    assert msg == '取消成功'
+```
 
+#### (4) 验证取消后收藏列表
+```python
+def test_usergoodsfavor_index_after_cancel():
+    resp = RequestUtils().send_request(
+        method="post",
+        url="http://101.34.221.219:8010/api.php",
+        params={"s": "usergoodsfavor/index"}
+    )
+    
+    code = resp.json()['code']
+    text = resp.text
+    assert code == 0
+    assert '"goods_id":"2"' not in text  # 验证商品ID=2已移除
+```
 
+---
 
+## 项目技术栈总结
+| 技术         | 应用场景           |
+| ------------ | ------------------ |
+| Python       | 基础编程语言       |
+| Pytest       | 测试框架管理用例   |
+| Requests     | 发送HTTP请求       |
+| YAML         | 数据驱动测试       |
+| Logging      | 生成测试日志       |
+| Allure       | 生成可视化测试报告 |
+| Fixture      | 清理测试数据       |
+| 变量接口关联 | Token全局共享      |
+```
+```
 
