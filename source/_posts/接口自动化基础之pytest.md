@@ -717,66 +717,6 @@ def test_bbc():
 }
 ```
 
-### 总结：配置文件
-
-run.py
-
-```python
-import pytest
-import os
-pytest.main()  # 启动测试框架, 自动生成allure数据
-os.system('allure generate -c -o report  temps')  # 手动生成allure报告
-```
-
-pytest.ini
-
-```ini
-[pytest]
-
-addopts = --alluredir=temps  --clean-alluredir  tests/homework/test_2_1.py
-
-markers =
-  api
-  ui
-  ut
-  e2e
-
-log_file = ./logs/pytest.log
-log_file_level = info
-log_file_format = %(levelname)-8s %(asctime)s [%(name)s:%(lineno)s]  : %(message)s
-log_file_date_format  = %Y-%m-%d %H:%M:%S
-
-
-; 记录用例执行结果
-result_log_enable = 1
-; 记录用例分割线
-result_log_separator = 1
-;分割线等级
-result_log_level_separator  = warning
-;异常信息等级
-result_log_level_verbose = info
-
-disable_test_id_escaping_and_forfeit_all_rights_to_community_support = 1
-```
-
-### 将常用包打包成 requirements.txt
-
-如果你希望保持每个项目独立，但又不想手动一个个安装依赖，可以：
-
-在原项目中导出依赖：
-
-```bash
-pip freeze > requirements.txt
-```
-
-新建项目后，在终端运行：
-
-```bash
-pip install -r requirements.txt
-```
-
-这样就能快速恢复所有依赖。
-
 # 三、接口自动化基础之Pytest框架之YAML详解以及Parametrize数据驱动(day15)
 
 ## 1. YAML语法详解
@@ -960,7 +900,7 @@ pytest是通用的测试框架，适用于：
 
 ![](https://cdn.jsdelivr.net/gh/SereinCease/images/blog/2025-06-30/20250630121506-795a4e.png)
 
-**通用的黑盒测试框架：**  
+## 通用的黑盒测试框架：  
 
 ```
 commons/      # 常用代码目录
@@ -974,13 +914,90 @@ pytest.ini    # 配置文件
 run.py        # 框架启动文件
 ```
 
+### 相关配置文件
+
+run.py
+
+```python
+import pytest
+import os
+pytest.main()  # 启动测试框架, 自动生成allure数据
+os.system('allure generate -c -o report  temps')  # 手动生成allure报告
+```
+
+`pytest.ini`
+
+```ini
+[pytest]
+
+addopts =  -s -v --alluredir=./temps --clean-alluredir  tests/homework/test_2_1.py  
+
+markers =
+  api
+  ui
+  ut
+  e2e
+
+log_file = ./logs/pytest.log
+log_file_level = info
+log_file_format = %(levelname)-8s %(asctime)s [%(name)s:%(lineno)s]  : %(message)s
+log_file_date_format  = %Y-%m-%d %H:%M:%S
 
 
+; 记录用例执行结果
+result_log_enable = 1
+; 记录用例分割线
+result_log_separator = 1
+;分割线等级
+result_log_level_separator  = warning
+;异常信息等级
+result_log_level_verbose = info
 
+disable_test_id_escaping_and_forfeit_all_rights_to_community_support = 1
+```
 
+### 1.安装依赖  
 
+```bash
+pip install -r req.txt
+```
 
+`req.txt`
 
+```
+webdriver-helper==1.*
+pytest
+pytest-result-log
+pytest-yaml-sanmu
+pytest-xlsx
+allure-pytest
+```
+
+#### 将常用包打包成 requirements.txt
+
+如果你希望保持每个项目独立，但又不想手动一个个安装依赖，可以：
+
+在原项目中导出依赖：
+
+```bash
+pip freeze > requirements.txt
+```
+
+新建项目后，在终端运行：
+
+```bash
+pip install -r requirements.txt
+```
+
+这样就能快速恢复所有依赖。
+
+### 2.启动框架  
+
+执行`run.py`文件或使用`pytest`
+
+### 3.查看日志
+
+### 4.查看报告
 
 
 

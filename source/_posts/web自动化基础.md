@@ -9,7 +9,7 @@ description:
 
 
 
-# 一、Web自动化前端基础及Selenium原理和环境安装
+# 一、Web自动化前端基础及Selenium原理和环境安装（day25）
 
 ## 1. API自动化和Web自动化区别
 
@@ -197,7 +197,7 @@ selenium底层原理：
 
 
 
-# 二、Web自动化Selenium浏览器控制及元素控制
+# 二、Web自动化Selenium浏览器控制及元素控制（day26）
 
 **项目地址：http://101.34.221.219:8010/**
 
@@ -336,7 +336,7 @@ print(a.tag_name)                  # 元素标签名（如：input）
 print(a.get_attribute("type"))     # 获取属性值（如：text）
 ```
 
-# 三、Web自动化元素定位及定位等待解决定位失败
+# 三、Web自动化元素定位及定位等待解决定位失败（day27）
 
 ## 1. 元素定位方法
 
@@ -516,11 +516,9 @@ XPATH 是XML的查询语言，支持逻辑判断、函数调用
        input()
    ```
 
-   
-
 2. **元素存在，定位不到**：
 
-   ex:id发生变化
+   ex：id发生变化
 
    解决方案：手动写Xpath路径
 
@@ -537,6 +535,8 @@ XPATH 是XML的查询语言，支持逻辑判断、函数调用
 
 3. **定位成功，不能交互**：被遮挡
 
+   解决方案：通过JavaScript绕过遮挡（如`execute_script("arguments[0].click()", element)`）。  
+
    ```python
    with get_webdriver() as driver:
    
@@ -549,9 +549,9 @@ XPATH 是XML的查询语言，支持逻辑判断、函数调用
        input("暂停执行") # 等待输入
    ```
 
-   
-
 4. **可以交互，没有效果**：元素内容、状态不对
+
+   如移除`disabled`状态
 
    ```python
    with get_webdriver() as driver:
@@ -567,47 +567,8 @@ XPATH 是XML的查询语言，支持逻辑判断、函数调用
        input("暂停执行") # 等待输入
    ```
 
-   
 
-​	
-
-
-
-
-
-1. **定位表达式错误**：  
-   - 解决方案：使用开发者工具验证XPath/CSS。  
-2. **元素被遮挡**：  
-   - 解决方案：通过JavaScript绕过遮挡（如`execute_script("arguments[0].click()", element)`）。  
-3. **元素状态无效**：  
-   - 解决方案：修改元素属性（如移除`disabled`状态）。  
-
-**示例：处理遮挡和状态问题**  
-```python
-# 通过JS点击被遮挡元素
-el = driver.find_element(By.LINK_TEXT, '注册')
-driver.execute_script("arguments[0].click()", el)
-
-# 移除禁用状态并操作
-el_a = driver.find_element(By.XPATH, '//input[@disabled]')
-driver.execute_script('arguments[0].removeAttribute("disabled")', el_a)
-el_a.send_keys("123")
-```
-
----
-
-## 5. 最佳实践
-- **优先使用相对XPath**：避免因页面结构调整导致定位失败。  
-- **结合显式等待**：确保元素加载完成后再操作。  
-- **简化定位表达式**：如`//input[@name="accounts"]`优于长绝对路径。  
-
-**总结**：合理选择定位策略，结合等待和JS处理复杂场景，可显著提升自动化脚本稳定性。  
-```
-```
-
-
-
-## 6. 定位等待策略
+## 5. 定位等待策略
 
 元素尚未出现，或者已经消失
 
@@ -653,7 +614,8 @@ lambda d: driver.find_element(By.XPATH, '//p[@class="prompt-msg"]').text)
 # 函数不加括号
 ```
 
-- **优点**：灵活控制等待条件（如文本内容、元素属性等）。
+- **优点**：提前出现，提前结束等待，灵活控制等待条件（如元素是否出现、内容是否正确，位置是否合适，效果是否生
+  效等）。
 - **缺点**：需熟悉Python和Selenium。
 
 原理：

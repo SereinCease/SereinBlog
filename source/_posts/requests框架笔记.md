@@ -721,35 +721,33 @@ def test_file_upload():
 ### 2. 获取Token（其他用例的依赖）
 ```python
 from commons.request_utils import RequestUtils
-
+g_var = {
+    "url": "http://116.62.63.211/shop/api.php"
+}
 def test_get_token():
-    resp = RequestUtils().send_request(
+    res = RequestUtils().send_request(
         method="post",
-        url="http://101.34.221.219:8010/api.php",
+        url=g_var['url'],
         params={
             "s": "user/login",
             "application": "app",
-            "application_client_type": "ios",
+            "application_client_type": "ios"
         },
         json={
-            "accounts": "beifan_1205",
-            "pwd": "beifan_1205",
+            "accounts": "lyreth",
+            "pwd": "123456",
             "type": "username"
         }
     )
-    
-    code = resp.json()['code']
-    token = resp.json()['data']['token']
-    
-    assert code == 0
-    assert token != ""
-    
-    # 设置全局公共参数
-    RequestUtils.public_params = {
+    token = res.json()["data"]["token"]
+    code = res.json()['code']
+    RequestUtils.pubilc_params = {
         "application": "app",
         "application_client_type": "ios",
         "token": token
     }
+    assert code == 0
+    assert token != ""
 ```
 
 ---
@@ -758,15 +756,21 @@ def test_get_token():
 #### (1) 收藏商品
 ```python
 def test_goods_favor():
-    resp = RequestUtils().send_request(
+    res = RequestUtils().send_request(
         method="post",
-        url="http://101.34.221.219:8010/api.php",
-        params={"s": "goods/favor"},
-        json={"id": 2, "is_mandatory_favor": 1}
+        url=g_var['url'],
+        params={
+            "s": "goods/favor",
+        },
+        json={
+            "id": "12"，
+            'is_mandatory_favor': 1
+        }
     )
-    
-    code = resp.json()['code']
+    code = res.json()['code']
+    msg = res.json()['msg']
     assert code == 0
+    assert msg == '收藏成功'
 ```
 
 #### (2) 验证收藏列表
@@ -774,7 +778,7 @@ def test_goods_favor():
 def test_usergoodsfavor_index_after_favor():
     resp = RequestUtils().send_request(
         method="post",
-        url="http://101.34.221.219:8010/api.php",
+        url=g_var['url'],
         params={"s": "usergoodsfavor/index"}
     )
     
@@ -789,7 +793,7 @@ def test_usergoodsfavor_index_after_favor():
 def test_usergoodsfavor_cancel():
     resp = RequestUtils().send_request(
         method="post",
-        url="http://101.34.221.219:8010/api.php",
+        url=g_var['url'],
         params={"s": "usergoodsfavor/cancel"},
         json={"id": "2"}
     )
@@ -815,19 +819,10 @@ def test_usergoodsfavor_index_after_cancel():
     assert '"goods_id":"2"' not in text  # 验证商品ID=2已移除
 ```
 
----
-
-## 项目技术栈总结
-| 技术         | 应用场景           |
-| ------------ | ------------------ |
-| Python       | 基础编程语言       |
-| Pytest       | 测试框架管理用例   |
-| Requests     | 发送HTTP请求       |
-| YAML         | 数据驱动测试       |
-| Logging      | 生成测试日志       |
-| Allure       | 生成可视化测试报告 |
-| Fixture      | 清理测试数据       |
-| 变量接口关联 | Token全局共享      |
-```
-```
-
+目前为主：
+学习了：python、pytest、reqeusts
+封装了：requests日志记录、公共参数、文件上传
+实战了：微信接口项目、电商接口项目
+应用了：fixture删除测试数据、变量接口关联、yaml数据驱动测试
+输出了：log日志文件、allure测试报告
+实现：python=pytest+requests+yaml+logging+allure接口自动化测试
